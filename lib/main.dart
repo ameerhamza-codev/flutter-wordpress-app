@@ -1,6 +1,7 @@
 import 'package:dixie_direct/provider/favourite_provider.dart';
 import 'package:dixie_direct/provider/theme_provider.dart';
 import 'package:dixie_direct/screens/navigator/bottom_bar.dart';
+import 'package:dixie_direct/screens/splash.dart';
 import 'package:dixie_direct/utils/theme_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -47,7 +48,7 @@ class _MyAppState extends State<MyApp> {
               child: MaterialApp(
                 debugShowCheckedModeBanner: false,
                 theme: Styles.themeData(themeChangeProvider.darkTheme, context),
-                home: BottomBar(),
+                home: SplashScreen(),
 
               ),
             );

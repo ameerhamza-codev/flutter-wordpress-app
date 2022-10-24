@@ -1,9 +1,10 @@
-import 'package:dixie_direct/apis/favourite_pref.dart';
-import 'package:dixie_direct/model/business_model.dart';
-import 'package:dixie_direct/model/category_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dixie_direct/apis/sql_api.dart';
 import 'package:dixie_direct/screens/business_detail.dart';
-import 'package:dixie_direct/utils/constant.dart';
+import 'package:dixie_direct/sql_model/business_sql_model.dart';
+import 'package:dixie_direct/sql_model/category_sql_model.dart';
 import 'package:dixie_direct/widgets/favourite_widget.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../apis/bussiness_api.dart';
@@ -11,7 +12,7 @@ import '../provider/theme_provider.dart';
 import '../utils/theme_data.dart';
 
 class BusinessListScreen extends StatefulWidget {
-  CategoryModel category;
+  CategorySqlModel category;
 
   BusinessListScreen(this.category);
 
@@ -32,9 +33,9 @@ class _BusinessListScreenState extends State<BusinessListScreen> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: FutureBuilder<List<BusinessModel>>(
-              future: BusinessApi.getBusinessInCategory(widget.category.id!),
-              builder: (context,AsyncSnapshot<List<BusinessModel>> snapshot) {
+          child: FutureBuilder<List<BusinessSqlModel>>(
+              future: SqlApi.getBusinessInCategory(widget.category.categoryId!),
+              builder: (context,AsyncSnapshot<List<BusinessSqlModel>> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(),
@@ -77,17 +78,26 @@ class _BusinessListScreenState extends State<BusinessListScreen> {
                                     children: [
                                       Expanded(
                                         child: Container(
+                                          width: double.infinity,
                                           decoration: BoxDecoration(
                                             border: Border.all(color: Styles.themeData(themeData.darkTheme, context).primaryColor,width: 2),
-                                              image: DecorationImage(
+                                              /*image: DecorationImage(
                                                   image: NetworkImage(snapshot.data![index].uagbFeaturedImageSrc!.full!.first),
                                                   fit: BoxFit.cover
-                                              )
+                                              )*/
+                                          ),
+                                          child: CachedNetworkImage(
+                                            fit: BoxFit.fitWidth,
+                                            imageUrl: snapshot.data![index].imageUrl!,
+                                            placeholder: (context, url) => Center(
+                                              child: CircularProgressIndicator(),
+                                            ),
+                                            errorWidget: (context, url, error) => Icon(Icons.error),
                                           ),
                                         ),
                                       ),
                                       SizedBox(height: 10,),
-                                      Text(snapshot.data![index].title!=null?snapshot.data![index].title!.rendered!:"${snapshot.data![index].id}",maxLines: 1,textAlign: TextAlign.center,style: TextStyle(fontSize:13,fontWeight: FontWeight.w300),),
+                                      Text(snapshot.data![index].name!,maxLines: 1,textAlign: TextAlign.center,style: TextStyle(fontSize:13,fontWeight: FontWeight.w300),),
 
                                     ],
                                   ),
@@ -95,7 +105,7 @@ class _BusinessListScreenState extends State<BusinessListScreen> {
                                     alignment: Alignment.topRight,
                                     child: Padding(
                                       padding: const EdgeInsets.all(5),
-                                      child: FavoriteWidget(snapshot.data![index].id!),
+                                      child: FavoriteWidget(snapshot.data![index].businessId!),
                                     ),
                                   )
                                 ],

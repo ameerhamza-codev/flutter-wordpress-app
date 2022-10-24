@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'package:dixie_direct/apis/bussiness_api.dart';
-import 'package:dixie_direct/model/business_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dixie_direct/sql_model/business_sql_model.dart';
 import 'package:dixie_direct/utils/location.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
@@ -8,6 +8,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
+import '../apis/sql_api.dart';
 import '../provider/theme_provider.dart';
 import 'business_detail.dart';
 
@@ -20,7 +21,7 @@ class MapScreen extends StatefulWidget {
 }
   
 class MapScreenState extends State<MapScreen> {
-  List<BusinessModel> businesses=[];
+  List<BusinessSqlModel> businesses=[];
   final Completer<GoogleMapController> _controller = Completer();
   CameraPosition? _kGooglePlex;
   final Set<Marker> markers = Set();
@@ -44,17 +45,17 @@ class MapScreenState extends State<MapScreen> {
       );
     });
 
-    BusinessApi.getAllBusinesses().then((value)async{
+    SqlApi.getAllBusiness().then((value)async{
       businesses=value;
       value.forEach((element) async{
 
         List<Location> locations=[];
-        await locationFromAddress('${element.acf!.locations!.first.address!}, ${element.acf!.locations!.first.address2!}, ${element.acf!.locations!.first.city}, ${element.acf!.locations!.first.state}  ${element.acf!.locations!.first.zip}').then((value){
+        await locationFromAddress('${element.address}').then((value){
           if(value.isNotEmpty){
             locations=value;
             LatLng _center =  LatLng(locations.first.latitude, locations.first.longitude);
             markers.add(Marker( //add first marker
-              markerId: MarkerId(element.id!.toString()),
+              markerId: MarkerId(element.businessId!.toString()),
               position: _center, //position of marker
               icon: BitmapDescriptor.defaultMarker, //Icon for Marker
             ));
@@ -128,28 +129,35 @@ class MapScreenState extends State<MapScreen> {
                   ),
                 ),
                 suggestionsCallback: (pattern) async {
-                  List<BusinessModel> search=[];
+                  List<BusinessSqlModel> search=[];
                   businesses.forEach((element) {
-                    if(element.title!.rendered!.toLowerCase().trim().contains(pattern.toLowerCase().trim())){
+                    if(element.name!.toLowerCase().trim().contains(pattern.toLowerCase().trim())){
                       search.add(element);
                     }
                   });
                   return search;
                 },
-                itemBuilder: (context, BusinessModel suggestion) {
+                itemBuilder: (context, BusinessSqlModel suggestion) {
                   return ListTile(
                     onTap: (){
                       Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) =>  BusinessDetail(suggestion)));
 
                     },
-                    leading:Image.network(suggestion.uagbFeaturedImageSrc!.full!.first,height: 50,),
-                    title: Text(suggestion.title!.rendered!),
+                    leading:CachedNetworkImage(
+                      height: 50,
+                      width: 50,
+                      fit: BoxFit.fitHeight,
+                      imageUrl: suggestion.imageUrl!,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                    title: Text(suggestion.name!),
                   );
                 },
-                onSuggestionSelected: (BusinessModel suggestion) {
-                  Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) => BusinessDetail(suggestion)
-                  ));
+                onSuggestionSelected: (BusinessSqlModel suggestion) {
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context) => BusinessDetail(suggestion)));
                 },
               ),
             )

@@ -1,10 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:dixie_direct/apis/sql_api.dart';
 import 'package:dixie_direct/provider/favourite_provider.dart';
+import 'package:dixie_direct/sql_model/business_sql_model.dart';
 import 'package:dixie_direct/widgets/favourite_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../apis/bussiness_api.dart';
-import '../model/business_model.dart';
 import '../provider/theme_provider.dart';
 import '../utils/constant.dart';
 import '../utils/theme_data.dart';
@@ -25,14 +27,14 @@ class _FavouritesState extends State<Favourites> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Styles.themeData(themeData.darkTheme, context).primaryColor,
-        title: const Text("Favourites"),
+        title: const Text("Favorites"),
       ),
       body: SafeArea(
         child:  Padding(
           padding: const EdgeInsets.all(8.0),
-          child: FutureBuilder<List<BusinessModel>>(
-              future: BusinessApi.getFavouriteBusinesses(provider.favorites),
-              builder: (context,AsyncSnapshot<List<BusinessModel>> snapshot) {
+          child: FutureBuilder<List<BusinessSqlModel>>(
+              future: SqlApi.getFavouriteBusinesses(provider.favorites),
+              builder: (context,AsyncSnapshot<List<BusinessSqlModel>> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: CircularProgressIndicator(),
@@ -75,23 +77,29 @@ class _FavouritesState extends State<Favourites> {
                                     child: Stack(
                                       children: [
                                         Container(
+                                          width: double.infinity,
                                           decoration: BoxDecoration(
                                               border: Border.all(color: Styles.themeData(themeData.darkTheme, context).primaryColor,width: 2),
-                                              image: DecorationImage(
-                                                  image: NetworkImage(snapshot.data![index].uagbFeaturedImageSrc!.full!.first),
-                                                  fit: BoxFit.cover
-                                              )
+
+                                          ),
+                                          child:  CachedNetworkImage(
+                                            fit: BoxFit.fitWidth,
+                                            imageUrl: snapshot.data![index].imageUrl!,
+                                            placeholder: (context, url) => Center(
+                                              child: CircularProgressIndicator(),
+                                            ),
+                                            errorWidget: (context, url, error) => Icon(Icons.error),
                                           ),
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.all(5),
-                                          child: FavoriteWidget(snapshot.data![index].id!),
+                                          child: FavoriteWidget(snapshot.data![index].businessId!),
                                         ),
                                       ],
                                     ),
                                   ),
                                   SizedBox(height: 10,),
-                                  Text(snapshot.data![index].title!=null?snapshot.data![index].title!.rendered!:"${snapshot.data![index].id}",maxLines: 1,textAlign: TextAlign.center,style: TextStyle(fontSize:13,fontWeight: FontWeight.w300),),
+                                  Text(snapshot.data![index].name!,maxLines: 1,textAlign: TextAlign.center,style: TextStyle(fontSize:13,fontWeight: FontWeight.w300),),
 
                                 ],
                               )

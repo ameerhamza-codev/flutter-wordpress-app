@@ -25,6 +25,17 @@ class BusinessApi{
   }
 
   static Future<List<CategoryModel>> getCategories()async{
+    List<String> categories=[
+      'Dining',
+      'Entertainment',
+      'Golf',
+      'Automotive',
+      'Shopping',
+      'Health &amp; Beauty',
+      'Maintenance',
+      'Services',
+      'Travel &amp; Lodging',
+    ];
     List<CategoryModel> homes=[];
     var dio = Dio();
     var response = await  dio.get('$apiUrl/industry',);
@@ -37,7 +48,18 @@ class BusinessApi{
 
     }
     else print("error ${response.statusCode} : ${response.data}");
-    return homes;
+    List<CategoryModel> sortedCategories=[];
+    for(int i=0;i<categories.length;i++){
+      homes.forEach((element) {
+        if(categories[i]==element.name){
+          sortedCategories.add(element);
+          //homes.remove(categories);
+        }
+      });
+    }
+
+
+    return sortedCategories;
 
   }
 
@@ -50,6 +72,13 @@ class BusinessApi{
 
       Iterable l = response.data;
       items = List<BusinessModel>.from(l.map((model)=> BusinessModel.fromJson(model)));
+      print("current category Id $categoryId");
+      items.forEach((element) {
+        print("business: ${element.id} ${element.title!.rendered!}");
+        element.industry!.forEach((category) {
+          print("category id $category");
+        });
+      });
       items.removeWhere((element) => !element.industry!.contains(categoryId));
 
     }
@@ -66,6 +95,7 @@ class BusinessApi{
 
       Iterable l = response.data;
       items = List<BusinessModel>.from(l.map((model)=> BusinessModel.fromJson(model)));
+
 
     }
     return items;

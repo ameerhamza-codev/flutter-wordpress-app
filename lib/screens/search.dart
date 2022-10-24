@@ -1,11 +1,12 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dixie_direct/apis/bussiness_api.dart';
-import 'package:dixie_direct/model/business_model.dart';
+import 'package:dixie_direct/apis/sql_api.dart';
+import 'package:dixie_direct/sql_model/business_sql_model.dart';
 import 'package:dixie_direct/utils/theme_data.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/theme_provider.dart';
-import '../utils/constant.dart';
 import 'business_detail.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   var _searchController=TextEditingController();
 
-  List<BusinessModel> searchResult=[];
+  List<BusinessSqlModel> searchResult=[];
   bool isLoading=false;
   @override
   Widget build(BuildContext context) {
@@ -59,7 +60,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               isLoading=true;
                               searchResult=[];
                             });
-                            await BusinessApi.getSearchResult(_searchController.text).then((value){
+                            await SqlApi.getSearchResult(_searchController.text).then((value){
                               setState(() {
                                 searchResult=value;
                                 isLoading=false;
@@ -124,8 +125,17 @@ class _SearchScreenState extends State<SearchScreen> {
                       Navigator.push(context, MaterialPageRoute(builder: (BuildContext context) =>  BusinessDetail(searchResult[index])));
 
                     },
-                    leading:Image.network(searchResult[index].uagbFeaturedImageSrc!.full!.first,height: 50,),
-                    title: Text(searchResult[index].title!.rendered!),
+                    leading: CachedNetworkImage(
+                      height: 50,
+                      width: 50,
+                      fit: BoxFit.fitHeight,
+                      imageUrl: searchResult[index].imageUrl!,
+                      placeholder: (context, url) => Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      errorWidget: (context, url, error) => Icon(Icons.error),
+                    ),
+                    title: Text(searchResult[index].name!),
                   );
                 },
               ):Center(
